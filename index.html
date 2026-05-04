@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <title>Next Level Finstra — Wealth Tracker</title>
 <style>
   @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&family=DM+Serif+Display&display=swap');
@@ -34,18 +34,21 @@
     --radius-xs: 5px;
   }
 
-  * { box-sizing: border-box; margin: 0; padding: 0; }
+  * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
 
   body {
     font-family: 'DM Sans', sans-serif;
     background: var(--bg);
     color: var(--text);
     min-height: 100vh;
+    min-height: 100dvh;
+    overflow-x: hidden;
   }
 
   /* ── Layout ── */
-  .layout { display: flex; min-height: 100vh; }
+  .layout { display: flex; min-height: 100vh; min-height: 100dvh; }
 
+  /* ── SIDEBAR (desktop) ── */
   .sidebar {
     width: 220px;
     background: var(--bg2);
@@ -58,18 +61,12 @@
     top: 0;
     height: 100vh;
     overflow-y: auto;
+    transition: transform 0.3s ease;
+    z-index: 200;
   }
 
-  .brand {
-    margin-bottom: 2rem;
-    padding: 0 0.25rem;
-  }
-  .brand-name {
-    font-family: 'DM Serif Display', serif;
-    font-size: 17px;
-    color: var(--text);
-    line-height: 1.2;
-  }
+  .brand { margin-bottom: 2rem; padding: 0 0.25rem; }
+  .brand-name { font-family: 'DM Serif Display', serif; font-size: 17px; color: var(--text); line-height: 1.2; }
   .brand-name span { color: var(--green); }
   .brand-sub { font-size: 10px; color: var(--text3); letter-spacing: 0.12em; text-transform: uppercase; margin-top: 2px; }
 
@@ -98,6 +95,54 @@
   .sidebar-footer { margin-top: auto; padding-top: 1rem; border-top: 1px solid var(--border); }
   .save-status { font-size: 11px; color: var(--text3); }
 
+  /* ── MOBILE TOP BAR ── */
+  .mobile-topbar {
+    display: none;
+    position: fixed;
+    top: 0; left: 0; right: 0;
+    height: 56px;
+    background: var(--bg2);
+    border-bottom: 1px solid var(--border);
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 1rem;
+    z-index: 300;
+  }
+  .mobile-brand { font-family: 'DM Serif Display', serif; font-size: 16px; }
+  .mobile-brand span { color: var(--green); }
+  .hamburger-btn {
+    width: 40px; height: 40px;
+    border: 1px solid var(--border2);
+    border-radius: var(--radius-xs);
+    background: var(--bg3);
+    color: var(--text);
+    cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    flex-direction: column; gap: 5px;
+    padding: 10px;
+  }
+  .hamburger-btn span {
+    display: block; width: 18px; height: 2px;
+    background: var(--text2); border-radius: 2px;
+    transition: all 0.2s;
+  }
+  .hamburger-btn.open span:nth-child(1) { transform: translateY(7px) rotate(45deg); }
+  .hamburger-btn.open span:nth-child(2) { opacity: 0; }
+  .hamburger-btn.open span:nth-child(3) { transform: translateY(-7px) rotate(-45deg); }
+
+  /* ── MOBILE DRAWER OVERLAY ── */
+  .drawer-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.6);
+    z-index: 250;
+    opacity: 0;
+    transition: opacity 0.3s;
+  }
+  .drawer-overlay.open { opacity: 1; }
+
+  /* ── MAIN ── */
   .main { flex: 1; padding: 2rem 2.5rem; overflow-x: hidden; max-width: 900px; }
 
   /* ── Page header ── */
@@ -118,23 +163,14 @@
     margin-bottom: 1rem;
   }
   .card-title {
-    font-size: 11px;
-    font-weight: 600;
-    letter-spacing: 0.1em;
-    text-transform: uppercase;
-    color: var(--text3);
-    margin-bottom: 1rem;
+    font-size: 11px; font-weight: 600; letter-spacing: 0.1em;
+    text-transform: uppercase; color: var(--text3); margin-bottom: 1rem;
   }
 
   /* ── Metric grid ── */
   .metric-grid { display: grid; grid-template-columns: repeat(3, minmax(0,1fr)); gap: 10px; margin-bottom: 1rem; }
-  .metric-grid-4 { grid-template-columns: repeat(4, minmax(0,1fr)); }
-  .metric {
-    background: var(--bg3);
-    border: 1px solid var(--border);
-    border-radius: var(--radius-sm);
-    padding: 1rem;
-  }
+  .metric-grid-4 { grid-template-columns: repeat(4, minmax(0,1fr)) !important; }
+  .metric { background: var(--bg3); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 1rem; }
   .metric-label { font-size: 11px; color: var(--text3); margin-bottom: 5px; letter-spacing: 0.03em; }
   .metric-val { font-size: 20px; font-weight: 600; color: var(--text); }
   .metric-val.green { color: var(--green); }
@@ -157,13 +193,15 @@
     background: var(--bg3);
     border: 1px solid var(--border2);
     border-radius: var(--radius-xs);
-    padding: 7px 10px;
-    font-size: 13px;
+    padding: 9px 10px;
+    font-size: 14px;
     color: var(--text);
     font-family: 'DM Sans', sans-serif;
     width: 100%;
     outline: none;
     transition: border-color 0.15s;
+    -webkit-appearance: none;
+    min-height: 40px;
   }
   input:focus, select:focus { border-color: var(--green); }
   select option { background: var(--bg3); }
@@ -171,7 +209,7 @@
 
   /* ── Buttons ── */
   .btn {
-    padding: 8px 16px;
+    padding: 10px 18px;
     border-radius: var(--radius-xs);
     font-size: 13px;
     font-weight: 500;
@@ -181,75 +219,72 @@
     color: var(--text2);
     font-family: 'DM Sans', sans-serif;
     transition: all 0.15s;
+    min-height: 42px;
+    touch-action: manipulation;
   }
   .btn:hover { background: var(--bg3); color: var(--text); }
   .btn-green { background: var(--green-dim); border-color: var(--green); color: var(--green); }
   .btn-green:hover { background: var(--green); color: var(--bg); }
   .btn-ghost {
-    width: 100%;
-    padding: 8px;
+    width: 100%; padding: 10px;
     border: 1px dashed var(--border2);
     border-radius: var(--radius-xs);
     background: transparent;
     color: var(--text3);
-    font-size: 12px;
+    font-size: 13px;
     cursor: pointer;
     font-family: 'DM Sans', sans-serif;
     margin-top: 8px;
     transition: all 0.15s;
+    min-height: 42px;
+    touch-action: manipulation;
   }
-  .btn-ghost:hover { border-color: var(--green); color: var(--green); background: var(--green-dim2); }
+  .btn-ghost:hover, .btn-ghost:active { border-color: var(--green); color: var(--green); background: var(--green-dim2); }
 
   .del-btn {
-    width: 26px; height: 26px; border-radius: 4px;
+    width: 36px; height: 36px; border-radius: 4px;
     border: none; background: transparent;
-    color: var(--text3); cursor: pointer; font-size: 16px;
+    color: var(--text3); cursor: pointer; font-size: 18px;
     display: flex; align-items: center; justify-content: center;
     flex-shrink: 0; transition: all 0.15s;
+    touch-action: manipulation;
   }
-  .del-btn:hover { background: var(--red-dim); color: var(--red); }
+  .del-btn:hover, .del-btn:active { background: var(--red-dim); color: var(--red); }
 
-  /* ── Tables ── */
+  /* ── Tables (desktop style) ── */
   .tbl-head, .tbl-row {
-    display: grid;
-    gap: 8px;
-    align-items: center;
-    padding: 7px 0;
+    display: grid; gap: 8px; align-items: center; padding: 7px 0;
   }
   .tbl-head { border-bottom: 1px solid var(--border2); margin-bottom: 4px; }
   .tbl-head span { font-size: 10px; color: var(--text3); font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; }
   .tbl-row { border-bottom: 1px solid var(--border); }
   .tbl-row:last-child { border-bottom: none; }
 
-  .debt-grid { grid-template-columns: 2fr 1fr 1fr 1fr 30px; }
-  .income-grid { grid-template-columns: 2fr 1.2fr 1fr 30px; }
-  .goals-grid { grid-template-columns: 2fr 1fr 1fr 1fr 30px; }
+  .debt-grid { grid-template-columns: 2fr 1fr 1fr 1fr 36px; }
+  .income-grid { grid-template-columns: 2fr 1.2fr 1fr 36px; }
+  .goals-grid { grid-template-columns: 2fr 1fr 1fr 1fr 36px; }
 
   /* ── Strategy tabs ── */
-  .stabs { display: flex; gap: 6px; margin-bottom: 1rem; }
+  .stabs { display: flex; gap: 6px; margin-bottom: 1rem; flex-wrap: wrap; }
   .stab {
-    padding: 6px 14px;
-    border-radius: 99px;
-    font-size: 12px;
-    font-weight: 500;
-    border: 1px solid var(--border2);
-    background: transparent;
-    color: var(--text2);
-    cursor: pointer;
-    font-family: 'DM Sans', sans-serif;
-    transition: all 0.15s;
+    padding: 8px 16px; border-radius: 99px;
+    font-size: 13px; font-weight: 500;
+    border: 1px solid var(--border2); background: transparent;
+    color: var(--text2); cursor: pointer;
+    font-family: 'DM Sans', sans-serif; transition: all 0.15s;
+    min-height: 38px; touch-action: manipulation;
   }
   .stab.active { background: var(--blue-dim); border-color: var(--blue); color: var(--blue); }
 
   /* ── Result rows ── */
   .result-box { background: var(--bg3); border-radius: var(--radius-sm); padding: 1rem; border: 1px solid var(--border); }
-  .result-row { display: flex; justify-content: space-between; align-items: center; padding: 6px 0; border-bottom: 1px solid var(--border); font-size: 13px; }
+  .result-row { display: flex; justify-content: space-between; align-items: center; padding: 7px 0; border-bottom: 1px solid var(--border); font-size: 13px; gap: 8px; }
   .result-row:last-child { border-bottom: none; }
-  .result-row .rl { color: var(--text2); }
-  .result-row .rv { font-weight: 500; color: var(--text); }
+  .result-row .rl { color: var(--text2); flex: 1; }
+  .result-row .rv { font-weight: 500; color: var(--text); text-align: right; flex-shrink: 0; }
 
   /* ── Badges ── */
-  .badge { font-size: 10px; padding: 2px 8px; border-radius: 99px; font-weight: 600; letter-spacing: 0.04em; }
+  .badge { font-size: 10px; padding: 2px 8px; border-radius: 99px; font-weight: 600; letter-spacing: 0.04em; white-space: nowrap; }
   .badge-green { background: var(--green-dim); color: var(--green); }
   .badge-blue { background: var(--blue-dim); color: var(--blue); }
   .badge-purple { background: var(--purple-dim); color: var(--purple); }
@@ -263,17 +298,14 @@
   .goal-progress-wrap { height: 6px; background: var(--bg); border-radius: 99px; overflow: hidden; margin: 5px 0 2px; }
   .goal-progress-bar { height: 100%; background: var(--green2); border-radius: 99px; transition: width 0.5s; }
 
-  /* ── Chart canvas ── */
   canvas { width: 100% !important; }
 
   /* ── Export row ── */
   .export-row { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 0.75rem; }
 
   /* ── Bucket row ── */
-  .bucket-row { display: flex; align-items: center; justify-content: space-between; margin-bottom: 3px; }
-  .bucket-tag {
-    font-size: 10px; padding: 2px 8px; border-radius: 99px; font-weight: 600;
-  }
+  .bucket-row { display: flex; align-items: center; justify-content: space-between; margin-bottom: 3px; flex-wrap: wrap; gap: 6px; }
+  .bucket-tag { font-size: 10px; padding: 2px 8px; border-radius: 99px; font-weight: 600; }
   .tag-ok { background: var(--green-dim); color: var(--green); }
   .tag-warn { background: var(--amber-dim); color: var(--amber); }
   .tag-over { background: var(--red-dim); color: var(--red); }
@@ -289,17 +321,177 @@
   .history-table td { padding: 8px; border-bottom: 1px solid var(--border); color: var(--text); }
   .history-table tr:last-child td { border-bottom: none; }
 
+  /* ── Dashboard 2-col ── */
+  .dash-two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+
   /* ── Scrollbar ── */
   ::-webkit-scrollbar { width: 4px; }
   ::-webkit-scrollbar-track { background: transparent; }
   ::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 99px; }
+
+  /* ════════════════════════════════════════
+     TABLET  (≤ 1024px)
+  ════════════════════════════════════════ */
+  @media (max-width: 1024px) {
+    .sidebar { width: 180px; padding: 1.25rem 0.75rem 1.5rem; }
+    .main { padding: 1.75rem 1.5rem; }
+    .metric-grid-4 { grid-template-columns: repeat(2, minmax(0,1fr)) !important; }
+    .metric-val { font-size: 18px; }
+  }
+
+  /* ════════════════════════════════════════
+     MOBILE  (≤ 768px)
+  ════════════════════════════════════════ */
+  @media (max-width: 768px) {
+
+    /* Show top bar, hide desktop sidebar */
+    .mobile-topbar { display: flex; }
+
+    .sidebar {
+      position: fixed;
+      top: 0; left: 0;
+      height: 100dvh;
+      width: 260px;
+      transform: translateX(-100%);
+      padding-top: 70px;
+      z-index: 300;
+      box-shadow: 4px 0 24px rgba(0,0,0,0.5);
+    }
+    .sidebar.open { transform: translateX(0); }
+    .drawer-overlay { display: block; pointer-events: none; }
+    .drawer-overlay.open { pointer-events: auto; }
+
+    .brand { display: none; } /* shown in topbar instead */
+
+    /* Main gets top padding for topbar + bottom padding for nav hint */
+    .main {
+      padding: 72px 1rem 1.5rem;
+      width: 100%;
+      max-width: 100%;
+    }
+
+    /* Page header */
+    .page-title { font-size: 20px; }
+    .page-sub { font-size: 12px; }
+    .page-header { margin-bottom: 1.25rem; }
+
+    /* Cards */
+    .card { padding: 1rem; border-radius: 10px; }
+
+    /* Metrics: 2 columns on mobile */
+    .metric-grid { grid-template-columns: repeat(2, minmax(0,1fr)); gap: 8px; }
+    .metric-grid-4 { grid-template-columns: repeat(2, minmax(0,1fr)) !important; }
+    .metric { padding: 0.8rem; }
+    .metric-val { font-size: 17px; }
+    .metric-label { font-size: 10px; }
+
+    /* Dashboard 2-col → 1-col */
+    .dash-two-col { grid-template-columns: 1fr; }
+
+    /* Input rows → 1 column */
+    .input-row { grid-template-columns: 1fr; }
+    .input-row.three { grid-template-columns: 1fr; }
+
+    /* ── DEBT TABLE → card-style rows ── */
+    .tbl-head.debt-grid,
+    .tbl-head.income-grid,
+    .tbl-head.goals-grid { display: none; }
+
+    .tbl-row.debt-grid {
+      grid-template-columns: 1fr 1fr;
+      grid-template-rows: auto auto;
+      gap: 6px;
+      padding: 10px 0;
+      position: relative;
+    }
+    .tbl-row.debt-grid > input:nth-child(1) { grid-column: 1 / -1; }
+    .tbl-row.debt-grid > .del-btn {
+      position: absolute; top: 10px; right: 0;
+      grid-column: unset;
+    }
+
+    .tbl-row.income-grid {
+      grid-template-columns: 1fr 1fr;
+      gap: 6px;
+      padding: 10px 0;
+      position: relative;
+    }
+    .tbl-row.income-grid > input:first-child { grid-column: 1 / -1; }
+    .tbl-row.income-grid > .del-btn {
+      position: absolute; top: 10px; right: 0;
+    }
+
+    .tbl-row.goals-grid {
+      grid-template-columns: 1fr 1fr;
+      gap: 6px;
+      padding: 10px 0;
+      position: relative;
+    }
+    .tbl-row.goals-grid > input:first-child { grid-column: 1 / -1; }
+    .tbl-row.goals-grid > select { grid-column: 1 / -1; }
+    .tbl-row.goals-grid > .del-btn {
+      position: absolute; top: 10px; right: 0;
+    }
+
+    /* Expense rows */
+    .expense-row-inner {
+      grid-template-columns: 1fr 1fr 36px !important;
+    }
+
+    /* Snapshot input */
+    .snap-row-inner {
+      grid-template-columns: 1fr !important;
+    }
+
+    /* Export row → stacked */
+    .export-row { flex-direction: column; }
+    .export-row .btn { width: 100%; }
+
+    /* History table — scrollable */
+    .history-table-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+    .history-table { min-width: 480px; }
+
+    /* Canvas height */
+    #nw-chart { max-height: 240px; }
+
+    /* Stabs wrap */
+    .stabs { gap: 8px; }
+    .stab { flex: 1; text-align: center; padding: 9px 10px; }
+
+    /* Notion list */
+    .notion-list { padding-left: 1rem !important; }
+
+    /* Budget bar section text */
+    .bucket-row span:first-child { font-size: 12px; }
+  }
+
+  /* ════════════════════════════════════════
+     SMALL PHONES (≤ 390px)
+  ════════════════════════════════════════ */
+  @media (max-width: 390px) {
+    .main { padding: 66px 0.75rem 1.5rem; }
+    .metric-val { font-size: 15px; }
+    .metric { padding: 0.7rem 0.6rem; }
+    .card { padding: 0.875rem 0.875rem; }
+  }
 </style>
 </head>
 <body>
 
+<!-- MOBILE TOP BAR -->
+<div class="mobile-topbar">
+  <div class="mobile-brand"><span>Next Level</span> Finstra</div>
+  <button class="hamburger-btn" id="hamburgerBtn" onclick="toggleDrawer()" aria-label="Menu">
+    <span></span><span></span><span></span>
+  </button>
+</div>
+
+<!-- DRAWER OVERLAY -->
+<div class="drawer-overlay" id="drawerOverlay" onclick="toggleDrawer()"></div>
+
 <div class="layout">
   <!-- SIDEBAR -->
-  <aside class="sidebar">
+  <aside class="sidebar" id="sidebar">
     <div class="brand">
       <div class="brand-name"><span>Next Level</span><br>Finstra</div>
       <div class="brand-sub">Wealth Tracker</div>
@@ -334,7 +526,7 @@
         <div class="page-sub">Your complete financial snapshot</div>
       </div>
 
-      <div class="metric-grid metric-grid-4" style="grid-template-columns:repeat(4,minmax(0,1fr))">
+      <div class="metric-grid metric-grid-4">
         <div class="metric"><div class="metric-label">Take-home pay</div><div class="metric-val blue" id="dm-income">$0</div><div class="metric-sub">per month</div></div>
         <div class="metric"><div class="metric-label">Passive income</div><div class="metric-val green" id="dm-passive">$0</div><div class="metric-sub">per month</div></div>
         <div class="metric"><div class="metric-label">Total debt</div><div class="metric-val red" id="dm-debt">$0</div><div class="metric-sub">outstanding</div></div>
@@ -355,7 +547,7 @@
         </div>
       </div>
 
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+      <div class="dash-two-col">
         <div class="card">
           <div class="card-title">50/30/20 snapshot</div>
           <div id="dash-budget"></div>
@@ -376,9 +568,9 @@
 
       <div class="card">
         <div class="card-title">Monthly income (after tax)</div>
-        <div class="field" style="max-width:240px">
+        <div class="field" style="max-width:280px">
           <label>Take-home pay ($)</label>
-          <input type="number" id="income" placeholder="e.g. 3000" oninput="calcBudget();autosave()">
+          <input type="number" id="income" placeholder="e.g. 3000" inputmode="decimal" oninput="calcBudget();autosave()">
         </div>
       </div>
 
@@ -432,9 +624,9 @@
           <button class="stab" id="stab-avalanche" onclick="setStrategy('avalanche')">Debt Avalanche</button>
         </div>
         <div style="font-size:12px;color:var(--text2);margin-bottom:0.875rem" id="strategy-desc">Pay smallest balance first — quick wins build momentum.</div>
-        <div class="field" style="max-width:220px;margin-bottom:1rem">
+        <div class="field" style="max-width:280px;margin-bottom:1rem">
           <label>Extra monthly payment ($)</label>
-          <input type="number" id="extra-payment" value="200" oninput="calcDebt();autosave()">
+          <input type="number" id="extra-payment" value="200" inputmode="decimal" oninput="calcDebt();autosave()">
         </div>
         <div id="debt-results"></div>
       </div>
@@ -493,12 +685,12 @@
 
       <div class="card">
         <div class="card-title">Add monthly snapshot</div>
-        <div class="input-row three">
+        <div class="input-row three snap-row-inner">
           <div class="field"><label>Month (e.g. Jan 2025)</label><input type="text" id="snap-month" placeholder="Jan 2025"></div>
-          <div class="field"><label>Total assets ($)</label><input type="number" id="snap-assets" placeholder="5000"></div>
-          <div class="field"><label>Total liabilities ($)</label><input type="number" id="snap-liab" placeholder="2000"></div>
+          <div class="field"><label>Total assets ($)</label><input type="number" id="snap-assets" placeholder="5000" inputmode="decimal"></div>
+          <div class="field"><label>Total liabilities ($)</label><input type="number" id="snap-liab" placeholder="2000" inputmode="decimal"></div>
         </div>
-        <button class="btn btn-green" onclick="addSnapshot()" style="margin-top:4px">Add snapshot</button>
+        <button class="btn btn-green" onclick="addSnapshot()" style="margin-top:8px">Add snapshot</button>
       </div>
 
       <div class="card">
@@ -509,10 +701,12 @@
 
       <div class="card">
         <div class="card-title">Snapshot history</div>
-        <table class="history-table" id="snap-table">
-          <thead><tr><th>Month</th><th>Assets</th><th>Liabilities</th><th>Net Worth</th><th>Change</th><th></th></tr></thead>
-          <tbody id="snap-body"></tbody>
-        </table>
+        <div class="history-table-wrap">
+          <table class="history-table" id="snap-table">
+            <thead><tr><th>Month</th><th>Assets</th><th>Liabilities</th><th>Net Worth</th><th>Change</th><th></th></tr></thead>
+            <tbody id="snap-body"></tbody>
+          </table>
+        </div>
         <div id="snap-empty" style="font-size:13px;color:var(--text3);padding:0.75rem 0">No snapshots yet.</div>
       </div>
     </div>
@@ -539,23 +733,23 @@
       <div class="card">
         <div class="card-title">Full JSON backup</div>
         <p style="font-size:13px;color:var(--text2);margin-bottom:1rem;line-height:1.6">Download your complete data as JSON — useful for backups or restoring data later.</p>
-        <button class="btn btn-green" onclick="exportJSON()">Download Full Backup (JSON)</button>
+        <button class="btn btn-green" style="width:100%" onclick="exportJSON()">Download Full Backup (JSON)</button>
       </div>
 
       <div class="card">
         <div class="card-title">Notion import guide</div>
         <div style="font-size:13px;color:var(--text2);line-height:1.8">
           <p style="margin-bottom:0.75rem">To use your exported CSV files inside Notion:</p>
-          <ol style="padding-left:1.25rem;display:flex;flex-direction:column;gap:0.5rem">
-            <li>Download the CSV file for the section you want (Budget, Debts, Income, etc.)</li>
+          <ol class="notion-list" style="padding-left:1.25rem;display:flex;flex-direction:column;gap:0.5rem">
+            <li>Download the CSV file for the section you want</li>
             <li>Open Notion and create a new page or open an existing one</li>
-            <li>Type <strong>/table</strong> and select <strong>Table — Full page</strong> or <strong>Table — Inline</strong></li>
-            <li>Click the <strong>...</strong> menu on the table → select <strong>Merge with CSV</strong></li>
-            <li>Upload your downloaded CSV file — Notion will auto-populate columns</li>
-            <li>Adjust column types (Number, Text, Select) as needed in Notion</li>
+            <li>Type <strong>/table</strong> and select <strong>Table — Full page</strong> or <strong>Inline</strong></li>
+            <li>Click the <strong>...</strong> menu → select <strong>Merge with CSV</strong></li>
+            <li>Upload your CSV — Notion will auto-populate columns</li>
+            <li>Adjust column types (Number, Text, Select) as needed</li>
           </ol>
           <p style="margin-top:0.875rem;padding:0.75rem;background:var(--bg3);border-radius:var(--radius-xs);border-left:3px solid var(--green);color:var(--text)">
-            Tip: Download this HTML file and open it directly in your browser anytime — no internet required. Bookmark it for quick access.
+            Tip: Download this HTML file and open it directly in your browser anytime — no internet required.
           </p>
         </div>
       </div>
@@ -566,6 +760,28 @@
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
 <script>
+/* ── DRAWER ── */
+function toggleDrawer(){
+  var sidebar = document.getElementById('sidebar');
+  var overlay = document.getElementById('drawerOverlay');
+  var btn = document.getElementById('hamburgerBtn');
+  var isOpen = sidebar.classList.contains('open');
+  sidebar.classList.toggle('open', !isOpen);
+  overlay.classList.toggle('open', !isOpen);
+  btn.classList.toggle('open', !isOpen);
+  document.body.style.overflow = isOpen ? '' : 'hidden';
+}
+
+function closeDrawer(){
+  var sidebar = document.getElementById('sidebar');
+  var overlay = document.getElementById('drawerOverlay');
+  var btn = document.getElementById('hamburgerBtn');
+  sidebar.classList.remove('open');
+  overlay.classList.remove('open');
+  btn.classList.remove('open');
+  document.body.style.overflow = '';
+}
+
 var state = {
   income: 0,
   needs: [{name:'Rent',amount:0},{name:'Utilities',amount:0},{name:'Groceries',amount:0}],
@@ -599,7 +815,10 @@ function switchTab(t, el){
   document.querySelectorAll('.nav-item').forEach(b=>b.classList.remove('active'));
   document.getElementById('tab-'+t).classList.add('active');
   if(el) el.classList.add('active');
+  closeDrawer();
   renderAll();
+  // Scroll to top on mobile
+  window.scrollTo({top:0, behavior:'smooth'});
 }
 
 /* ── BUDGET ── */
@@ -613,9 +832,9 @@ function updateExpense(cat,i,field,val){
 function renderExpenseInputs(cat, id){
   var el = document.getElementById(id); if(!el) return;
   el.innerHTML = state[cat].map((e,i)=>`
-    <div style="display:grid;grid-template-columns:1fr 1fr 28px;gap:8px;margin-bottom:6px;align-items:end">
+    <div style="display:grid;grid-template-columns:1fr 1fr 36px;gap:8px;margin-bottom:6px;align-items:end" class="expense-row-inner">
       <div class="field"><input type="text" placeholder="Name (e.g. Rent)" value="${e.name||''}" oninput="updateExpense('${cat}',${i},'name',this.value)"></div>
-      <div class="field"><input type="number" placeholder="Amount ($)" value="${e.amount||''}" oninput="updateExpense('${cat}',${i},'amount',this.value)"></div>
+      <div class="field"><input type="number" placeholder="Amount ($)" value="${e.amount||''}" inputmode="decimal" oninput="updateExpense('${cat}',${i},'amount',this.value)"></div>
       <button class="del-btn" onclick="removeExpense('${cat}',${i})">×</button>
     </div>`).join('');
 }
@@ -660,9 +879,9 @@ function renderAnalysis(){
     <div class="result-row"><span class="rl">Total income</span><span class="rv">${fmt(inc)}</span></div>
     <div class="result-row"><span class="rl">Total allocated</span><span class="rv">${fmt(total)}</span></div>
     <div class="result-row"><span class="rl">Unallocated</span><span class="rv" style="color:${rem>=0?'var(--green)':'var(--red)'}">${fmt(rem)}</span></div>
-    <div class="result-row"><span class="rl">Needs vs 50% target</span><span class="rv">${fmt(n)} / ${fmt(inc*0.5)}</span></div>
-    <div class="result-row"><span class="rl">Wants vs 30% target</span><span class="rv">${fmt(w)} / ${fmt(inc*0.3)}</span></div>
-    <div class="result-row"><span class="rl">Savings vs 20% target</span><span class="rv">${fmt(s)} / ${fmt(inc*0.2)}</span></div>
+    <div class="result-row"><span class="rl">Needs vs 50%</span><span class="rv">${fmt(n)} / ${fmt(inc*0.5)}</span></div>
+    <div class="result-row"><span class="rl">Wants vs 30%</span><span class="rv">${fmt(w)} / ${fmt(inc*0.3)}</span></div>
+    <div class="result-row"><span class="rl">Savings vs 20%</span><span class="rv">${fmt(s)} / ${fmt(inc*0.2)}</span></div>
   </div>`;
 }
 
@@ -683,9 +902,9 @@ function renderDebt(){
   el.innerHTML = state.debts.map((d,i)=>`
     <div class="tbl-row debt-grid">
       <input type="text" placeholder="e.g. Visa Card" value="${d.name||''}" oninput="updateDebt(${i},'name',this.value)">
-      <input type="number" placeholder="5000" value="${d.balance||''}" oninput="updateDebt(${i},'balance',this.value)">
-      <input type="number" placeholder="19.9" value="${d.apr||''}" oninput="updateDebt(${i},'apr',this.value)">
-      <input type="number" placeholder="100" value="${d.minPayment||''}" oninput="updateDebt(${i},'minPayment',this.value)">
+      <input type="number" placeholder="Balance $" value="${d.balance||''}" inputmode="decimal" oninput="updateDebt(${i},'balance',this.value)">
+      <input type="number" placeholder="APR %" value="${d.apr||''}" inputmode="decimal" oninput="updateDebt(${i},'apr',this.value)">
+      <input type="number" placeholder="Min pay $" value="${d.minPayment||''}" inputmode="decimal" oninput="updateDebt(${i},'minPayment',this.value)">
       <button class="del-btn" onclick="removeDebt(${i})">×</button>
     </div>`).join('') || '<div style="font-size:13px;color:var(--text3);padding:0.5rem 0">No debts added yet.</div>';
   calcDebt();
@@ -730,9 +949,9 @@ function calcDebt(){
   var years=Math.floor(months/12); var mos=months%12;
   el.innerHTML=`<div class="result-box">
     <div class="result-row"><span class="rl">Total debt</span><span class="rv">${fmt(totalDebt)}</span></div>
-    <div class="result-row"><span class="rl">Monthly payment (min + extra)</span><span class="rv">${fmt(totalMin+extra)}</span></div>
+    <div class="result-row"><span class="rl">Monthly payment</span><span class="rv">${fmt(totalMin+extra)}</span></div>
     <div class="result-row"><span class="rl">Debt-free in</span><span class="rv" style="color:var(--green)">${years>0?years+'y ':''} ${mos}mo</span></div>
-    <div class="result-row"><span class="rl">Total interest paid</span><span class="rv" style="color:var(--red)">${fmt(totalInterest)}</span></div>
+    <div class="result-row"><span class="rl">Total interest</span><span class="rv" style="color:var(--red)">${fmt(totalInterest)}</span></div>
     <div class="result-row"><span class="rl">Strategy</span><span class="rv">${state.strategy==='snowball'?'Debt Snowball':'Debt Avalanche'}</span></div>
     ${debts.slice(0,4).map((d,i)=>`<div class="result-row"><span class="rl">Priority ${i+1}: ${d.name||'Debt '+(i+1)}</span><span class="rv">${fmt(d.balance)}</span></div>`).join('')}
   </div>`;
@@ -753,7 +972,7 @@ function renderIncome(){
     <div class="tbl-row income-grid">
       <input type="text" placeholder="e.g. Dividend Portfolio" value="${s.name||''}" oninput="updateIncome(${i},'name',this.value)">
       <select onchange="updateIncome(${i},'type',this.value)">${incomeTypes.map(t=>`<option ${s.type===t?'selected':''}>${t}</option>`).join('')}</select>
-      <input type="number" placeholder="50" value="${s.amount||''}" oninput="updateIncome(${i},'amount',this.value)">
+      <input type="number" placeholder="$/mo" value="${s.amount||''}" inputmode="decimal" oninput="updateIncome(${i},'amount',this.value)">
       <button class="del-btn" onclick="removeIncome(${i})">×</button>
     </div>`).join('')||'<div style="font-size:13px;color:var(--text3);padding:0.5rem 0">No income streams added yet.</div>';
   calcIncome();
@@ -770,7 +989,7 @@ function calcIncome(){
     <div class="result-row"><span class="rl">Total passive income</span><span class="rv" style="color:var(--green)">${fmt(total)}/mo</span></div>
     <div class="result-row"><span class="rl">Annual passive income</span><span class="rv">${fmt(annual)}/yr</span></div>
     ${rows}
-    <div class="result-row"><span class="rl">As % of take-home pay</span><span class="rv">${state.income>0?((total/state.income)*100).toFixed(1)+'%':'—'}</span></div>
+    <div class="result-row"><span class="rl">As % of take-home</span><span class="rv">${state.income>0?((total/state.income)*100).toFixed(1)+'%':'—'}</span></div>
   </div>`;
   updateDashboard();
 }
@@ -789,8 +1008,8 @@ function renderGoals(){
   gl.innerHTML=state.goals.map((g,i)=>`
     <div class="tbl-row goals-grid">
       <input type="text" placeholder="e.g. 6-month emergency fund" value="${g.name||''}" oninput="updateGoal(${i},'name',this.value)">
-      <input type="number" placeholder="10000" value="${g.target||''}" oninput="updateGoal(${i},'target',this.value)">
-      <input type="number" placeholder="2500" value="${g.saved||''}" oninput="updateGoal(${i},'saved',this.value)">
+      <input type="number" placeholder="Target $" value="${g.target||''}" inputmode="decimal" oninput="updateGoal(${i},'target',this.value)">
+      <input type="number" placeholder="Saved $" value="${g.saved||''}" inputmode="decimal" oninput="updateGoal(${i},'saved',this.value)">
       <select onchange="updateGoal(${i},'category',this.value)">${goalCats.map(c=>`<option ${g.category===c?'selected':''}>${c}</option>`).join('')}</select>
       <button class="del-btn" onclick="removeGoal(${i})">×</button>
     </div>`).join('')||'<div style="font-size:13px;color:var(--text3);padding:0.5rem 0">No goals yet. Add your first financial goal above.</div>';
@@ -800,13 +1019,13 @@ function renderGoals(){
     var pct = g.target>0?Math.min((g.saved/g.target)*100,100):0;
     var rem = Math.max(g.target-g.saved,0);
     return `<div style="margin-bottom:1rem">
-      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:3px">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:3px;gap:8px;flex-wrap:wrap">
         <span style="font-size:13px;font-weight:500;color:var(--text)">${g.name||'Unnamed goal'}</span>
         <span class="badge ${goalBadge[g.category]||'badge-amber'}">${g.category}</span>
       </div>
-      <div style="display:flex;justify-content:space-between;font-size:11px;color:var(--text3);margin-bottom:4px">
-        <span>${fmt(g.saved)} saved of ${fmt(g.target)}</span>
-        <span>${pct.toFixed(0)}% complete — ${fmt(rem)} remaining</span>
+      <div style="display:flex;justify-content:space-between;font-size:11px;color:var(--text3);margin-bottom:4px;flex-wrap:wrap;gap:4px">
+        <span>${fmt(g.saved)} of ${fmt(g.target)}</span>
+        <span>${pct.toFixed(0)}% · ${fmt(rem)} left</span>
       </div>
       <div class="goal-progress-wrap"><div class="goal-progress-bar" style="width:${pct.toFixed(1)}%;background:${pct>=100?'var(--green)':'var(--blue)'}"></div></div>
     </div>`;
@@ -876,17 +1095,20 @@ function renderChart(){
     data:{
       labels:labels,
       datasets:[
-        {label:'Net Worth',data:nwData,borderColor:'#4ade80',backgroundColor:'rgba(74,222,128,0.08)',borderWidth:2,pointRadius:4,pointBackgroundColor:'#4ade80',tension:0.3,fill:true},
-        {label:'Assets',data:assetsData,borderColor:'#60a5fa',backgroundColor:'transparent',borderWidth:1.5,pointRadius:3,borderDash:[4,3],tension:0.3},
-        {label:'Liabilities',data:liabData,borderColor:'#f87171',backgroundColor:'transparent',borderWidth:1.5,pointRadius:3,borderDash:[4,3],tension:0.3}
+        {label:'Net Worth',data:nwData,borderColor:'#4ade80',backgroundColor:'rgba(74,222,128,0.08)',borderWidth:2,pointRadius:3,pointBackgroundColor:'#4ade80',tension:0.3,fill:true},
+        {label:'Assets',data:assetsData,borderColor:'#60a5fa',backgroundColor:'transparent',borderWidth:1.5,pointRadius:2,borderDash:[4,3],tension:0.3},
+        {label:'Liabilities',data:liabData,borderColor:'#f87171',backgroundColor:'transparent',borderWidth:1.5,pointRadius:2,borderDash:[4,3],tension:0.3}
       ]
     },
     options:{
       responsive:true,
-      plugins:{legend:{labels:{color:'#8a9e82',font:{family:'DM Sans',size:12}}},tooltip:{callbacks:{label:ctx=>ctx.dataset.label+': '+fmt(ctx.raw)}}},
+      plugins:{
+        legend:{labels:{color:'#8a9e82',font:{family:'DM Sans',size:11},boxWidth:12}},
+        tooltip:{callbacks:{label:ctx=>ctx.dataset.label+': '+fmt(ctx.raw)}}
+      },
       scales:{
-        x:{ticks:{color:'#4d5e48',font:{family:'DM Sans',size:11}},grid:{color:'rgba(255,255,255,0.04)'}},
-        y:{ticks:{color:'#4d5e48',font:{family:'DM Sans',size:11},callback:v=>fmt(v)},grid:{color:'rgba(255,255,255,0.04)'}}
+        x:{ticks:{color:'#4d5e48',font:{family:'DM Sans',size:10},maxRotation:45},grid:{color:'rgba(255,255,255,0.04)'}},
+        y:{ticks:{color:'#4d5e48',font:{family:'DM Sans',size:10},callback:v=>fmt(v)},grid:{color:'rgba(255,255,255,0.04)'}}
       }
     }
   });
@@ -921,10 +1143,6 @@ function updateDashboard(){
   if(db){
     var n=state.needs.reduce((a,e)=>a+(e.amount||0),0);
     var w=state.wants.reduce((a,e)=>a+(e.amount||0),0);
-    [{label:'Needs 50%',val:n,target:inc*0.5,color:'bar-blue'},{label:'Wants 30%',val:w,target:inc*0.3,color:'bar-green'},{label:'Savings 20%',val:sav,target:inc*0.2,color:'bar-purple'}].forEach(r=>{
-      var bw=inc>0?Math.min((r.val/inc)*100,100):0;
-      db.innerHTML+='';
-    });
     db.innerHTML=[{label:'Needs 50%',val:n,target:inc*0.5,color:'bar-blue'},{label:'Wants 30%',val:w,target:inc*0.3,color:'bar-green'},{label:'Savings 20%',val:sav,target:inc*0.2,color:'bar-purple'}].map(r=>{
       var bw=inc>0?Math.min((r.val/inc)*100,100):0;
       var ok=r.val<=r.target;
